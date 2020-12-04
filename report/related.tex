@@ -1,2 +1,5 @@
 \section{Related work}~\label{sec:related}
-TBD.
+
+In this work, we mostly build off of the work from~\cite{DBLP:journals/pacmpl/WangFBCD20}. They give an algorithm for synthesizing a two-part visualization program from a trace of the output. Their method may run slowly, especially for those desired programs which are deep or with large program classes, but for most of the benchmarks in the human benchmark suite, it takes no more than two demonstrations to get the desired program in the top 10 possibilities.
+
+In \citep{le2017interactive}, the authors provide their solution to interactive program synthesis, which is essentially the same as what we call incremental program synthesis. Besides the difference in the methodology in their paper compared with ours on how to solve under-specified circumstances, another major difference is their focus on string manipulations versus the current paper which focuses on table manipulations.

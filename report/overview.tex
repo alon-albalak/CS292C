@@ -1,4 +1,92 @@
 \section{Overview}
 \label{sec:overview}
 
-TBD.
+\subsection{Motivating Example}
+In this section, we give an overview of our approach to the incremental synthesis problem. We do so by demonstrating the methods on a simple motivating example.
+
+Given the following table \ref{table:1}, and the user specification that they would like to transform the table into the output in table \ref{table:2}, the program synthesis problem attempts to identify table manipulating programs which satisfy the input and output pair, respectively table \ref{table:1} and table \ref{table:2}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+ID & g1-0 & g1-10 & g1-30 & g2-0 & g2-10 & g2-30 \\
+\hline
+A & 1 & 4 & 7 & 10 & 13 & 16 \\
+\hline
+B & 2 & 5 & 8 & 11 & 14 & 17 \\
+\hline
+C & 3 & 6 & 9 & 12 & 15 & 18 \\
+\hline
+\end{tabular}
+\caption{Simple example: data}
+\label{table:1}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+A & 0 minutes & 1 & 10  \\
+\hline
+\end{tabular}
+\caption{Simple example: user specification}
+\label{table:2}
+\end{table}
+
+More specifically, the incremental program synthesis problem attempts to identify satisfying programs without wasting time finding all possible satisfying programs, rather just a subset. In this case, the user has specified that they would like to reformat the table with the first column as the ID. They specify that the second column should be the time derived from the header row, included in the original table as g1-0 for 0 minutes, g1-10 for 10 minutes, etc. They would like the third column to be taken as the value for the given ID, time pair for g1 and the fourth column to be the value for the given ID and time for g2.
+
+As we can see, there are many values in the original table for which the user has not demonstrated their desired transformation. This leads to multiple valid programs and output tables which satisfy the limited specifications. For example, the user may intend for the values from time 0 to be split by ID into separate rows by column, as in table \ref{table:3}. On the other hand, they may actually intend for each time value to be put into a separate row, as in table \ref{table:4}. In the non-incremental program synthesis setting, a program is created which satisfies the user's conditions, but if the program is not correct and the user gives further details, the program synthesis starts from scratch. This extra computation is wasteful, and can be avoided by using an incremental program synthesis setting.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+A & 0 minutes & 1 & 10 \\
+\hline
+B & 0 minutes & 2 & 11 \\
+\hline
+C & 0 minutes & 3 & 12 \\
+\hline
+\end{tabular}
+\caption{Simple example: proposed solution 1}
+\label{table:3}
+\end{table}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+A & 0 minutes & 1 & 10 \\
+\hline
+A & 10 minutes & 4 & 13 \\
+\hline
+A & 30 minutes & 7 & 16 \\
+\hline
+\end{tabular}
+\caption{Simple example: proposed solution 1}
+\label{table:4}
+\end{table}
+
+\subsection{Tentative solution}
+
+We aim to improve the incremental program synthesis problem through 2 methods. 
+
+First, if the algorithm determines that a group of programs are likely to be very similar, or have the same properties as designated by their component functions, and a subset of the programs have been determined to satisfy the constraints, then it would be more efficient to search other areas of the search tree to find solutions which are less similar. By grouping similar programs together and caching them for later refinement the algorithm can determine that it need not further explore a particular area of the solution space. In doing so, the search algorithm can more efficiently explore the search space, and spend less time on programs that it already knows can satisfy the given constraints.
+
+Second, using the same methodology as above, the algorithm can deduce those subsets of the search space which may not satisfy the specifications at all. Thus, the search algorithm will spend less time in areas of the search which give partial programs that are unlikely, or impossible, to lead to correct solutions.
+
+Speed is particularly important in incremental synthesis. If the algorithm returns a program which fits the users vague specification, but not their underlying intent, then the user must give further specification and subsequently wait for the algorithm to run. This iterative process may occur multiple times and users are unlikely to be satisfied with long wait times.
+
+As a search heuristic, we will use similarities between programs. For example, we can predict that a program whose family members in the search space are proven to create an output which satisfies the specifications, but which itself cannot be proven to satisfy the input-output pairs, is less likely to be useful to explore. Thus, a search through that section of the search space can be postponed until, and if, the user gives further refinement to their intent.
+
+For the deduction engine in our search, we will be using an SMT solver to test which classes of transformations will be guaranteed to satisfy the given input-output pairs.
+
+\subsection{Challenges}
+
+In the forward-deduction phase of search, there are decisions to be made in balancing the algorithms speed compared with the level of approximation that is acceptable. For example, on tables under some size threshold, it may simply be faster to evaluate the function on the given input-output samples rather than using a deduction engine. Perhaps, it will work better to use some simple algorithm to decide the level of detail in the deduction.
+
+Additionally, we will need to decide which classes of abstract programs to use for the deduction. Some constraints may be more obvious, but others may be more challenging to find yet better performing.
+
+Finally, there is the challenge of programming the deduction itself, either through a theorem prover such as z3 or manually coding a deduction engine for the table manipulation problem.
+
